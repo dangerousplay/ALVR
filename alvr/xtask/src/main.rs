@@ -154,6 +154,8 @@ fn main() {
         let appimage = args.contains("--appimage");
         let zsync = args.contains("--zsync");
 
+        let ffmpeg_git = args.contains("--ffmpeg-git");
+
         let platform: Option<String> = args.opt_value_from_str("--platform").unwrap();
         let version: Option<String> = args.opt_value_from_str("--version").unwrap();
         let root: Option<String> = args.opt_value_from_str("--root").unwrap();
@@ -164,7 +166,7 @@ fn main() {
                     if let Some(platform) = platform {
                         match platform.as_str() {
                             "windows" => dependencies::prepare_windows_deps(for_ci),
-                            "linux" => dependencies::build_ffmpeg_linux(!no_nvidia),
+                            "linux" => dependencies::build_ffmpeg_linux(!no_nvidia, ffmpeg_git),
                             "android" => dependencies::build_android_deps(for_ci),
                             _ => panic!("Unrecognized platform."),
                         }
@@ -172,7 +174,7 @@ fn main() {
                         if cfg!(windows) {
                             dependencies::prepare_windows_deps(for_ci);
                         } else if cfg!(target_os = "linux") {
-                            dependencies::build_ffmpeg_linux(!no_nvidia);
+                            dependencies::build_ffmpeg_linux(!no_nvidia, ffmpeg_git);
                         }
 
                         dependencies::build_android_deps(for_ci);

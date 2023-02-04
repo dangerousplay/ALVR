@@ -21,6 +21,14 @@ pub fn download(sh: &Shell, url: &str, destination: &Path) -> Result<(), xshell:
     cmd!(sh, "curl -L -o {destination} --url {url}").run()
 }
 
+pub fn git_clone(
+    sh: &Shell,
+    url: &str,
+    destination: &Path
+) -> Result<(), xshell::Error> {
+    cmd!(sh, "git clone --depth=1 {url} {destination}").run()
+}
+
 pub fn download_and_extract_zip(
     sh: &Shell,
     url: &str,

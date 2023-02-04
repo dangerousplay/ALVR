@@ -1,6 +1,7 @@
 use crate::command;
 use alvr_filesystem as afs;
 use std::fs;
+use std::io::ErrorKind;
 use xshell::{cmd, Shell};
 
 pub fn choco_install(sh: &Shell, packages: &[&str]) -> Result<(), xshell::Error> {
@@ -98,20 +99,28 @@ pub fn prepare_windows_deps(skip_admin_priv: bool) {
     prepare_ffmpeg_windows();
 }
 
-pub fn build_ffmpeg_linux(nvenc_flag: bool) {
+pub fn build_ffmpeg_linux(nvenc_flag: bool, ffmpeg_git: bool) {
     let sh = Shell::new().unwrap();
 
     let download_path = afs::deps_dir().join("linux");
-    command::download_and_extract_zip(
-        &sh,
-        "https://codeload.github.com/FFmpeg/FFmpeg/zip/n5.1",
-        &download_path,
-    )
-    .unwrap();
-
     let final_path = download_path.join("ffmpeg");
 
-    fs::rename(download_path.join("FFmpeg-n5.1"), &final_path).unwrap();
+    if let Err(e) = fs::remove_dir_all(&final_path) {
+        assert_eq!(e.kind(), ErrorKind::NotFound, "{}", e);
+    }
+
+    if ffmpeg_git {
+        command::git_clone(&sh, "https://github.com/FFmpeg/FFmpeg.git", &final_path).unwrap();
+    } else {
+        command::download_and_extract_zip(
+            &sh,
+            "https://codeload.github.com/FFmpeg/FFmpeg/zip/n5.1",
+            &final_path,
+        )
+        .unwrap();
+
+        fs::rename(download_path.join("FFmpeg-n5.1"), &final_path).unwrap();
+    }
 
     let flags = [
         "--enable-gpl",
